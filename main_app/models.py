@@ -35,7 +35,7 @@ class Household (models.Model) :
         return check_password(raw_passcode, self.passcode)
     
     def get_absolute_url (self) :
-        return reverse('member_selection')
+        return reverse('member_select')
 
     def __str__ (self) :
         return f'{self.street_address.title()} {self.city.title()}, {self.state.upper()} {self.zip_code}'
@@ -60,18 +60,18 @@ class Member (AbstractUser) :
         # unique member name within a household
         constraints = [
             models.UniqueConstraint(
-                fields=['household_id', 'name'], 
-                name='unique_member_name_within_household'
+                fields = ['household', 'name'], 
+                name = 'unique_member_name_within_household'
             )
         ]
 
     def save (self, *args, **kwargs) :
         self.name = self.name.strip().lower()
         self.password = make_password(self.password)
-        super(Household, self).save(*args, **kwargs)
+        super(Member, self).save(*args, **kwargs)
 
-    def verify_password (self, raw_passcode) :
-        return check_password(raw_passcode, self.password)
+    def verify_password (self, raw_password) :
+        return check_password(raw_password, self.password)
 
     def __str__ (self) :
         return f'{self.name.title()} at {self.household}'
