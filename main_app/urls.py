@@ -7,4 +7,6 @@ urlpatterns = [
 
     path('household/select', views.HouseholdSelect.as_view(), name = 'household_select'),
     path('household/create', views.HouseholdCreate.as_view(), name = 'household_create'),
+
+    path('member/select', views.MemberSelection.as_view(), name = 'member_selection'),
 ]
