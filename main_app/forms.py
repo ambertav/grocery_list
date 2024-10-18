@@ -2,7 +2,7 @@ from django import forms
 
 from .models import Household
 
-class HouseholdForm (forms.ModelForm) :
+class HouseholdCreateForm (forms.ModelForm) :
     passcode = forms.CharField(widget = forms.PasswordInput)
     passcode_confirmation = forms.CharField(widget = forms.PasswordInput)
 
@@ -17,5 +17,22 @@ class HouseholdForm (forms.ModelForm) :
 
         if passcode and passcode != passcode_confirmation :
             self.add_error('passcode_confirmation', 'Passcodes do not match.')
+        
+        return cleaned_data
+    
+class HouseholdLoginForm (forms.Form) :
+    street_address = forms.CharField(max_length = 100, label = 'Street Address')
+    city = forms.CharField(max_length = 100, label = 'City')
+    state = forms.CharField(max_length = 2, label = 'State')
+    zip_code = forms.CharField(max_length = 5, label = 'Zip Code')
+    passcode = forms.CharField(widget = forms.PasswordInput, label = 'Passcode')
+
+    def clean (self) : 
+        cleaned_data = super().clean()
+
+        for field in ['street_address', 'city', 'state'] :
+            cleaned_data[field] = cleaned_data[field].strip().lower()
+        
+        cleaned_data['zip_code'] = cleaned_data['zip_code'].strip()
         
         return cleaned_data

@@ -30,7 +30,7 @@ class Household (models.Model) :
         super(Household, self).save(*args, **kwargs)
 
     def verify_passcode (self, raw_passcode) :
-        return check_password(self.passcode, raw_passcode)
+        return check_password(raw_passcode, self.passcode)
 
     def __str__ (self) :
         return f'{self.street_address.title()} {self.city.title()}, {self.state.upper()} {self.zip_code}'
