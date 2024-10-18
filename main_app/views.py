@@ -6,7 +6,7 @@ from django.db import IntegrityError
 from django.contrib import messages
 
 from .models import Household, Member
-from .forms import HouseholdCreateForm, HouseholdLoginForm
+from .forms import HouseholdCreateForm, HouseholdLoginForm, MemberCreateForm
 
 def home (request) :
     return render(request, 'home.html')
@@ -14,7 +14,7 @@ def home (request) :
 class HouseholdCreate (CreateView) :
     model = Household
     form_class = HouseholdCreateForm
-    template_name = 'household/household_form.html'
+    template_name = 'household/household_create.html'
 
     def form_valid (self, form) :
         try :
@@ -54,7 +54,37 @@ class HouseholdSelect (View) :
         
         return render(request, self.template_name, { 'form': form })
 
-class MemberSelection (View) :
+class MemberCreate (CreateView) :
+    model = Member
+    form_class = MemberCreateForm
+    template_name = 'member/member_create.html'
+
+    def form_valid (self, form) :
+        try :
+            household_id = self.request.session.get('household')
+
+            if not household_id :
+                messages.error(self.request, 'Household not found. Please try again')
+                return redirect('household_select')
+            
+            household = Household.objects.get(id = household_id)
+            
+            member = form.save(commit = False)
+            member.household = household
+            member.save()
+
+            self.request.session['member'] = member.id
+            return super().form_valid(form)
+        
+        except Household.DoesNotExist :
+            self.request.session.pop('household', None)
+            return redirect('household_select')
+        
+        except IntegrityError :
+            messages.error(self.request, 'Member already exists. Please try again')
+            return self.form_invalid(form)
+
+class MemberSelect (View) :
     template_name = 'member/member_select.html'
 
     def get (self, request, *args, **kwargs) :
