@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 
 from django.views import View
+from django.views.generic import ListView
 from django.views.generic.edit import CreateView
 from django.db import IntegrityError
 from django.contrib import messages
@@ -190,6 +191,22 @@ class StoreList (View) :
             return redirect('store_create')
 
         return render(request, self.template_name, { 'stores': stores })
+    
+class StoreItemList (ListView) :
+    model = Item
+    template_name = 'item/item_list.html'
+    context_object_name = 'items'
+    paginate_by = 25
+
+    def get_queryset (self) :
+        store_id = self.kwargs['store_id']
+        return Item.objects.filter(store = store_id).order_by('id')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['store'] = Store.objects.get(id = self.kwargs['store_id'])
+        return context
+
     
 class ItemCreate (CreateView) :
     model = Item

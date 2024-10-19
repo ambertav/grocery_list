@@ -92,6 +92,7 @@ class ItemCreateForm (forms.ModelForm) :
         # adding default value back
         cleaned_data['price'] = cleaned_data['price'] if cleaned_data['price'] else 0
         cleaned_data['current_stock'] = cleaned_data['current_stock'] if cleaned_data['current_stock'] else 0
+        cleaned_data['unit'] = cleaned_data['unit'] if cleaned_data['unit'] else 'each'
 
         if cleaned_data['price']  < 0 or cleaned_data['current_stock'] < 0 or cleaned_data['ideal_stock'] < 0 or cleaned_data['minimum_stock'] < 0 :
             raise forms.ValidationError('Price and stock data must be greater than 0')

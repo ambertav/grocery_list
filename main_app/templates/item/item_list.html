@@ -1,0 +1,34 @@
+{% extends 'base.html' %} {% block title %}
+<title>Store List</title>
+{% endblock %} {% block content %}
+<h1>{{ store.name }}</h1>
+<div>
+    {% if items %}
+    <ul>
+      {% for item in items %}
+      <li>
+        <p>{{ item.name }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div>
+        <span>
+            {% if page_obj.has_previous %}
+                <a href="?page=1">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+    
+            <span>
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+    
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            {% endif %}
+        </span>
+    </div>
+</div>
+{% endblock %}
