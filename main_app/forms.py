@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Household, Member, Store
+from .models import Household, Member, Store, Item
 
 class HouseholdCreateForm (forms.ModelForm) :
     passcode = forms.CharField(widget = forms.PasswordInput)
@@ -67,6 +67,37 @@ class StoreCreateForm (forms.ModelForm) :
             cleaned_data[field] = cleaned_data[field].strip().lower()
         
         cleaned_data['zip_code'] = cleaned_data['zip_code'].strip()
+
+        return cleaned_data
+    
+class ItemCreateForm (forms.ModelForm) :
+    class Meta :
+        model = Item
+        fields = ('name', 'description', 'price', 'unit', 'current_stock', 'ideal_stock', 'minimum_stock')
+
+    def __init__ (self, *args, **kwargs) :
+        # remove default values 
+
+        super(ItemCreateForm, self).__init__(*args, **kwargs)
+        self.fields['price'].initial = None
+        self.fields['unit'].initial = ''
+        self.fields['current_stock'].initial = None
+
+    def clean (self) :
+        cleaned_data = super().clean()
+
+        for field in ['name', 'description', 'unit'] :
+            cleaned_data[field] = cleaned_data[field].strip().lower()
+
+        # adding default value back
+        cleaned_data['price'] = cleaned_data['price'] if cleaned_data['price'] else 0
+        cleaned_data['current_stock'] = cleaned_data['current_stock'] if cleaned_data['current_stock'] else 0
+
+        if cleaned_data['price']  < 0 or cleaned_data['current_stock'] < 0 or cleaned_data['ideal_stock'] < 0 or cleaned_data['minimum_stock'] < 0 :
+            raise forms.ValidationError('Price and stock data must be greater than 0')
+        
+        if cleaned_data['minimum_stock'] > cleaned_data['ideal_stock'] :
+            raise forms.ValidationError('Minimum stock cannot be greater than ideal stock')
 
         return cleaned_data
 
