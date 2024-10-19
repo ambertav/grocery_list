@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}
+<title>Select Member</title>
+{% endblock %}
+{% block content %}
+{% if messages %}
+<ul>
+  {% for message in messages %}
+  <li>{{ message }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<div>
+    {% if members %}
+    <ul>
+      {% for member in members %}
+      <li>
+          <a href="#" onclick="toggleForm('{{ member.id }}')">{{ member.name }}</a>
+          <form id="form-{{ member.id }}" style="display:none;" method="POST" action="{% url 'member_select' %}">
+              {% csrf_token %}
+              <input type="hidden" name="member_id" value="{{ member.id }}">
+              <input type="password" name="password" placeholder="Enter Password" required>
+              <input type="submit" value="Login">
+          </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+
+<script>
+    function toggleForm(memberId) {
+        var form = document.getElementById('form-' + memberId);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+</script>
+{% endblock %}
