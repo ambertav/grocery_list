@@ -10,6 +10,13 @@
     {% endblock %}
   </head>
   <body>
+    <nav>
+      <ul>
+        <li>
+          <a href="{% url 'store_list' %}">All Stores</a>
+        </li>
+      </ul>
+    </nav>
     <main>
       <div>{% block content %} {% endblock %}</div>
     </main>

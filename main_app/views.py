@@ -6,6 +6,7 @@ from django.views.generic import ListView
 from django.views.generic.edit import CreateView
 from django.db import IntegrityError
 from django.contrib import messages
+from django.db.models import F, FloatField, ExpressionWrapper
 
 from .models import Household, Member, Store, Item
 from .forms import HouseholdCreateForm, HouseholdLoginForm, MemberCreateForm, StoreCreateForm, ItemCreateForm
@@ -137,7 +138,6 @@ class MemberSelect (View) :
         members = household.members.all()
         return render(request, self.template_name, { 'members': members })
 
-
 class StoreCreate (CreateView) :
     model = Store
     form_class = StoreCreateForm
@@ -200,14 +200,18 @@ class StoreItemList (ListView) :
 
     def get_queryset (self) :
         store_id = self.kwargs['store_id']
-        return Item.objects.filter(store = store_id).order_by('id')
+        return Item.objects.filter(store = store_id).annotate(
+            stock_ratio = ExpressionWrapper(
+                (F('current_stock') / F('minimum_stock')),
+                output_field = FloatField()
+            )
+        ).order_by('stock_ratio')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['store'] = Store.objects.get(id = self.kwargs['store_id'])
         return context
 
-    
 class ItemCreate (CreateView) :
     model = Item
     form_class = ItemCreateForm
