@@ -18,7 +18,7 @@ class HouseholdCreate (CreateView) :
 
     def form_valid (self, form) :
         try :
-            household = form.save()
+            household = form.save(commit = False)
             self.request.session['household'] = household.id
             return super().form_valid(form)
         
@@ -43,7 +43,7 @@ class HouseholdSelect (View) :
             state = form.cleaned_data['state'],
             zip_code = form.cleaned_data['zip_code']
         ).first()
-
+            
             if household and household.verify_passcode(form.cleaned_data['passcode']) :
                 request.session['household'] = household.id
                 return redirect(household.get_absolute_url())
