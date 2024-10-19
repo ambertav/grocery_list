@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Household, Member
+from .models import Household, Member, Store
 
 class HouseholdCreateForm (forms.ModelForm) :
     passcode = forms.CharField(widget = forms.PasswordInput)
@@ -53,5 +53,20 @@ class MemberCreateForm (forms.ModelForm) :
         if password and password != password_confirmation :
             self.add_error('password_confirmation', 'Passwords do not match.')
         
+        return cleaned_data
+
+class StoreCreateForm (forms.ModelForm) :
+    class Meta :
+        model = Store
+        fields = ('name', 'street_address', 'city', 'state', 'zip_code')
+    
+    def clean (self) :
+        cleaned_data = super().clean()
+
+        for field in ['name', 'street_address', 'city', 'state'] :
+            cleaned_data[field] = cleaned_data[field].strip().lower()
+        
+        cleaned_data['zip_code'] = cleaned_data['zip_code'].strip()
+
         return cleaned_data
 

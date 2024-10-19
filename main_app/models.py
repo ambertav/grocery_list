@@ -11,7 +11,7 @@ class Household (models.Model) :
     passcode = models.CharField(max_length = 128)
     created_at = models.DateTimeField(auto_now_add = True)
 
-    class Meta:
+    class Meta :
         # unique address constraint
         constraints = [
             models.UniqueConstraint(
@@ -46,7 +46,7 @@ class Member (models.Model) :
     created_at = models.DateTimeField(auto_now_add = True)
     household = models.ForeignKey(Household, on_delete = models.CASCADE, related_name = 'members', null = False, blank = False)
 
-    class Meta:
+    class Meta :
         # unique member name within a household
         constraints = [
             models.UniqueConstraint(
@@ -64,9 +64,33 @@ class Member (models.Model) :
         return check_password(raw_password, self.password)
     
     def get_absolute_url (self) :
-        return reverse('store_select')
+        return reverse('store_list')
 
     def __str__ (self) :
         return f'{self.name.title()} at {self.household}'
-
     
+
+class Store (models.Model) :
+    name = models.CharField(max_length = 30)
+    street_address = models.CharField(max_length = 100)
+    city = models.CharField(max_length = 100)
+    state = models.CharField(max_length = 2)
+    zip_code =  models.CharField(max_length = 5)
+    created_at = models.DateTimeField(auto_now_add = True)
+    household = models.ForeignKey(Household, on_delete = models.CASCADE, related_name = 'stores', null = False, blank = False)
+
+    class Meta :
+        # unique store name within a household
+        constraints = [
+            models.UniqueConstraint(
+                fields = ['household', 'name'], 
+                name = 'unique_store_name_within_household'
+            )
+        ]
+    
+    def save (self, *args, **kwargs) :
+        self.name = self.name.strip().lower()
+        super(Store, self).save(*args, **kwargs)
+
+    def __str__ (self) :
+        return f'{self.name.title()} at {self.street_address.title()} {self.city.title()}, {self.state.upper()} {self.zip_code}'
