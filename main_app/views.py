@@ -167,4 +167,21 @@ class StoreList (View) :
     template_name = 'store/store_list.html'
 
     def get (self, request, *args, **kwargs) :
-        return render(request, self.template_name)
+        household_id = request.session.get('household')
+
+        if not household_id :
+            return redirect('household_select')
+    
+        try :
+            household = Household.objects.get(id = household_id)
+        
+        except Household.DoesNotExist :
+            request.session.pop('household', None)
+            return redirect('household_select')
+        
+        stores = household.stores.all()
+
+        if not stores :
+            return redirect('store_create')
+
+        return render(request, self.template_name, { 'stores': stores })

@@ -1,0 +1,15 @@
+{% extends 'base.html' %} {% block title %}
+<title>Store List</title>
+{% endblock %} {% block content %}
+<div>
+    {% if stores %}
+    <ul>
+      {% for store in stores %}
+      <li>
+        <p>{{ store.name }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+{% endblock %}
