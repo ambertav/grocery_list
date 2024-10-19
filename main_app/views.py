@@ -49,7 +49,6 @@ class HouseholdSelect (View) :
                 return redirect(household.get_absolute_url())
             
             else :
-                print('invalid passcode?')
                 messages.error(self.request, 'Invalid address or passcode. Please try again')
         
         return render(request, self.template_name, { 'form': form })
@@ -68,10 +67,9 @@ class MemberCreate (CreateView) :
                 return redirect('household_select')
             
             household = Household.objects.get(id = household_id)
-            
+
             member = form.save(commit = False)
             member.household = household
-            member.save()
 
             self.request.session['member'] = member.id
             return super().form_valid(form)
@@ -106,5 +104,41 @@ class MemberSelect (View) :
             return redirect('member_create')
 
         return render(request, self.template_name, { 'members': members })
+    
+    def post (self, request, *args, **kwargs) :
+        household_id = request.session.get('household')
+        
+        if not household_id :
+            return redirect('household_select')
+        
+        member_id = request.POST.get('member_id')
+        password = request.POST.get('password').strip()
+        
+        try :
+            household = Household.objects.get(id = household_id)
+            member = household.members.get(id = member_id)
+
+            if member and member.verify_password(password) :
+                request.session['member'] = member.id
+                return redirect(member.get_absolute_url())
+            
+            else :
+                messages.error(self.request, 'Invalid password. Please try again')
+
+        except Household.DoesNotExist :
+            request.session.pop('household', None)
+            return redirect('household_select')
+    
+        except Member.DoesNotExist :
+            messages.error(request, 'Member does not exist')
+        
+        members = household.members.all()
+        return render(request, self.template_name, { 'members': members })
 
 
+
+class StoreSelect (View) :
+    template_name = 'store/store_select.html'
+
+    def get (self, request, *args, **kwargs) :
+        return render(request, self.template_name)
