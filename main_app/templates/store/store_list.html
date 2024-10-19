@@ -6,7 +6,8 @@
     <ul>
       {% for store in stores %}
       <li>
-        <p>{{ store.name }}</p>
+        <a href="{% url 'item_list' store_id=store.id %}">{{ store.name }}</a>
+        <a href="{% url 'item_create' store_id=store.id %}">Add Item</a>
       </li>
       {% endfor %}
     </ul>

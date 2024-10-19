@@ -2,12 +2,14 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 
 from django.views import View
+from django.views.generic import ListView
 from django.views.generic.edit import CreateView
 from django.db import IntegrityError
 from django.contrib import messages
+from django.db.models import F, FloatField, ExpressionWrapper
 
-from .models import Household, Member
-from .forms import HouseholdCreateForm, HouseholdLoginForm, MemberCreateForm, StoreCreateForm
+from .models import Household, Member, Store, Item
+from .forms import HouseholdCreateForm, HouseholdLoginForm, MemberCreateForm, StoreCreateForm, ItemCreateForm
 
 def home (request) :
     return render(request, 'home.html')
@@ -136,8 +138,8 @@ class MemberSelect (View) :
         members = household.members.all()
         return render(request, self.template_name, { 'members': members })
 
-
 class StoreCreate (CreateView) :
+    model = Store
     form_class = StoreCreateForm
     template_name = 'store/store_create.html'
 
@@ -155,6 +157,10 @@ class StoreCreate (CreateView) :
             store.household = household
 
             return super().form_valid(form)
+        
+        except Household.DoesNotExist :
+            self.request.session.pop('household', None)
+            return redirect('household_select')
         
         except IntegrityError :
             messages.error(self.request, 'Store already exists. Please try again')
@@ -185,3 +191,49 @@ class StoreList (View) :
             return redirect('store_create')
 
         return render(request, self.template_name, { 'stores': stores })
+    
+class StoreItemList (ListView) :
+    model = Item
+    template_name = 'item/item_list.html'
+    context_object_name = 'items'
+    paginate_by = 25
+
+    def get_queryset (self) :
+        store_id = self.kwargs['store_id']
+        return Item.objects.filter(store = store_id).annotate(
+            stock_ratio = ExpressionWrapper(
+                (F('current_stock') / F('minimum_stock')),
+                output_field = FloatField()
+            )
+        ).order_by('stock_ratio')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['store'] = Store.objects.get(id = self.kwargs['store_id'])
+        return context
+
+class ItemCreate (CreateView) :
+    model = Item
+    form_class = ItemCreateForm
+    template_name = 'item/item_create.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        store_id = self.kwargs['store_id']
+        kwargs['initial'] = { 'store': store_id } 
+        return kwargs
+
+    def form_valid (self, form) :
+        household_id = self.request.session.get('household')
+
+        if not household_id :
+            messages.error(self.request, 'Household not found. Please try again')
+            return redirect('household_select')
+        
+        store = Store.objects.get(id = self.kwargs['store_id'], household = household_id)
+        item = form.save(commit = False)
+        item.store = store
+        return super().form_valid(form)
+    
+    def get_success_url (self) :
+        return reverse('store_list')
