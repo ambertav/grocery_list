@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.urls import reverse
 
 from django.views import View
 from django.views.generic.edit import CreateView
@@ -6,7 +7,7 @@ from django.db import IntegrityError
 from django.contrib import messages
 
 from .models import Household, Member
-from .forms import HouseholdCreateForm, HouseholdLoginForm, MemberCreateForm
+from .forms import HouseholdCreateForm, HouseholdLoginForm, MemberCreateForm, StoreCreateForm
 
 def home (request) :
     return render(request, 'home.html')
@@ -136,9 +137,34 @@ class MemberSelect (View) :
         return render(request, self.template_name, { 'members': members })
 
 
+class StoreCreate (CreateView) :
+    form_class = StoreCreateForm
+    template_name = 'store/store_create.html'
 
-class StoreSelect (View) :
-    template_name = 'store/store_select.html'
+    def form_valid (self, form) :
+        try :
+            household_id = self.request.session.get('household')
+
+            if not household_id :
+                messages.error(self.request, 'Household not found. Please try again')
+                return redirect('household_select')
+            
+            household = Household.objects.get(id = household_id)
+
+            store = form.save(commit = False)
+            store.household = household
+
+            return super().form_valid(form)
+        
+        except IntegrityError :
+            messages.error(self.request, 'Store already exists. Please try again')
+            return self.form_invalid(form)
+        
+    def get_success_url (self) :
+        return reverse('store_list')
+
+class StoreList (View) :
+    template_name = 'store/store_list.html'
 
     def get (self, request, *args, **kwargs) :
         return render(request, self.template_name)

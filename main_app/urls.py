@@ -11,5 +11,6 @@ urlpatterns = [
     path('member/select', views.MemberSelect.as_view(), name = 'member_select'),
     path('member/create', views.MemberCreate.as_view(), name = 'member_create'),
 
-    path('store/select', views.StoreSelect.as_view(), name = 'store_select'),
+    path('stores', views.StoreList.as_view(), name = 'store_list'),
+    path('stores/create', views.StoreCreate.as_view(), name = 'store_create'),
 ]
